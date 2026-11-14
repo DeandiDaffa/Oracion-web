@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direktori Angkatan</title>
+  <!-- CDN PapaParse untuk membaca CSV dengan akurat -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --accent: #3b82f6;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.6; }
+
+    nav { background: var(--primary); color: #fff; padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    nav .logo { font-weight: 700; font-size: 1.2rem; }
+    nav a { color: #e2e8f0; text-decoration: none; margin-left: 1.5rem; font-size: 0.95rem; }
+
+    .hero { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: #fff; text-align: center; padding: 4rem 1.5rem; }
+    .hero h1 { font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .hero p { max-width: 580px; margin: 0 auto; color: #dbeafe; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem; }
+    .search-box { max-width: 480px; margin: 0 auto 2rem; }
+    .search-box input { width: 100%; padding: 0.85rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; outline: none; }
+    .search-box input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+
+    .status { text-align: center; color: var(--muted); margin: 2rem 0; }
+
+    .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem; }
+    .member-card { background: var(--card); border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: 0.2s; }
+    .member-card:hover { transform: translateY(-4px); }
+    .avatar { width: 84px; height: 84px; border-radius: 50%; background: #dbeafe; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin: 0 auto 1rem; object-fit: cover; }
+    .member-card h3 { font-size: 1.1rem; margin-bottom: 0.2rem; }
+    .meta { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.6rem; }
+    .role-badge { display: inline-block; background: #eff6ff; color: var(--accent); font-size: 0.78rem; font-weight: 600; padding: 0.2rem 0.75rem; border-radius: 20px; margin-bottom: 0.8rem; }
+    .social-link { display: inline-block; font-size: 0.85rem; color: var(--primary); text-decoration: none; font-weight: 600; }
+
+    footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 1.5rem; font-size: 0.9rem; margin-top: 3rem; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">ORACION '26</div>
+    <div>
+      <a href="#anggota">Direktori</a>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <h1>Keluarga Besar Angkatan 2026</h1>
+    <p>Portal direktori mahasiswa dan dokumentasi resmi angkatan. Data tersinkronisasi langsung dengan database angkatan.</p>
+  </header>
+
+  <section class="container" id="anggota">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Cari nama, NIM, peran, atau asal daerah..." onkeyup="filterMembers()">
+    </div>
+
+    <div id="statusText" class="status">Memuat data anggota dari Google Sheets...</div>
+    <div class="member-grid" id="memberGrid"></div>
+  </section>
+
+  <footer>
+    &copy; 2026 Website Resmi Angkatan. Hosted on Vercel.
+  </footer>
+
+  <script>
+    // --- GANTI URL DI BAWAH INI DENGAN LINK CSV GOOGLE SHEETS KAMU ---
+    const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRzwWugzvUe0wRjbMM_sbdACvfSYUBM1c7Zc5Smg1KqOU0IR1BaF8YimbDVkkuiy9JVqCYP-i4z8xWh/pub?gid=0&single=true&output=csv";
+
+    let allMembers = [];
+
+    function fetchSheetData() {
+      Papa.parse(SHEET_CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          allMembers = results.data;
+          document.getElementById('statusText').style.display = 'none';
+          renderMembers(allMembers);
+        },
+        error: function(err) {
+          document.getElementById('statusText').textContent = "Gagal memuat data. Pastikan link CSV Google Sheets sudah benar dan dipublikasikan.";
+        }
+      });
+    }
+
+    function renderMembers(data) {
+      const grid = document.getElementById('memberGrid');
+      if (data.length === 0) {
+        grid.innerHTML = '<p class="status" style="grid-column: 1/-1;">Anggota tidak ditemukan.</p>';
+        return;
+      }
+
+      grid.innerHTML = data.map(m => {
+        const nama = m.nama || "Tanpa Nama";
+        // Mengambil inisial nama untuk avatar default jika foto kosong
+        const inisial = nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const avatarHTML = m.foto && m.foto.trim() !== ""
+          ? `<img src="${m.foto}" alt="${nama}" class="avatar">`
+          : `<div class="avatar">${inisial}</div>`;
+
+        const igClean = m.ig ? m.ig.replace('@','').trim() : '';
+        const igLink = igClean.startsWith('http') ? igClean : `https://instagram.com/${igClean}`;
+
+        return `
+          <div class="member-card">
+            ${avatarHTML}
+            <h3>${nama}</h3>
+            <div class="meta">${m.nim || '-'} • ${m.asal || '-'}</div>
+            <div class="role-badge">${m.peran || 'Anggota'}</div><br>
+            ${m.ig ? `<a href="${igLink}" target="_blank" class="social-link">Instagram ↗</a>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterMembers() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = allMembers.filter(m =>
+        (m.nama || '').toLowerCase().includes(q) ||
+        (m.nim || '').toLowerCase().includes(q) ||
+        (m.peran || '').toLowerCase().includes(q) ||
+        (m.asal || '').toLowerCase().includes(q)
+      );
+      renderMembers(filtered);
+    }
+
+    fetchSheetData();
+  </script>
+
+</body>
+</html>
