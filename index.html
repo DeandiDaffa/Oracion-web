@@ -43,7 +43,10 @@
     
     .card { background: var(--card); border-radius: 12px; padding: 1.5rem; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); transition: 0.2s; }
     .card:hover { transform: translateY(-4px); }
-    .avatar { width: 84px; height: 84px; border-radius: 50%; background: #dbeafe; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin: 0 auto 1rem; object-fit: cover; }
+    
+    /* Diubah dari bentuk bulat (50%) menjadi kotak bersudut tumpul (rounded-lg) */
+    .avatar { width: 100px; height: 100px; border-radius: 8px; background: #dbeafe; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin: 0 auto 1rem; object-fit: contain; border: 1px solid #e2e8f0; }
+    
     .card h3 { font-size: 1.1rem; margin-bottom: 0.2rem; }
     .meta { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.6rem; }
     .role-badge { display: inline-block; background: #eff6ff; color: var(--accent); font-size: 0.78rem; font-weight: 600; padding: 0.2rem 0.75rem; border-radius: 20px; margin-bottom: 0.8rem; }
